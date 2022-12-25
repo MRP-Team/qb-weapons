@@ -80,19 +80,20 @@ RegisterNetEvent('weapons:client:AddAmmo', function(type, amount, itemData)
     if CurrentWeaponData then
         if QBCore.Shared.Weapons[weapon]["name"] ~= "weapon_unarmed" and QBCore.Shared.Weapons[weapon]["ammotype"] == type:upper() then
             local total = GetAmmoInPedWeapon(ped, weapon)
-            local _, maxAmmo = GetMaxAmmo(ped, weapon)
-            if total < maxAmmo then
+            local retval = GetMaxAmmoInClip(ped, weapon, 1)
+            retval = tonumber(retval)
+            if total < retval then
                 QBCore.Functions.Progressbar("taking_bullets", Lang:t('info.loading_bullets'), Config.ReloadTime, false, true, {
                     disableMovement = false,
                     disableCarMovement = false,
                     disableMouse = false,
                     disableCombat = true,
                 }, {}, {}, {}, function() -- Done
-                    if QBCore.Shared.Weapons[weapon] then
-                        AddAmmoToPed(ped,weapon,amount)
-                        MakePedReload(ped)
-                        TriggerServerEvent("weapons:server:UpdateWeaponAmmo", CurrentWeaponData, total + amount)
-                        TriggerServerEvent('weapons:server:removeWeaponAmmoItem', itemData)
+                    if QBCore.Shared.Weapons[weapon] ~= nil then
+                        SetAmmoInClip(ped, weapon, 0)
+                        SetPedAmmo(ped, weapon, retval)
+                        TriggerServerEvent("weapons:server:UpdateWeaponAmmo", CurrentWeaponData, retval)
+                        TriggerServerEvent('weapons:server:removeWeaponAmmoItem', itemData.name, 1, itemData.slot)
                         TriggerEvent('inventory:client:ItemBox', QBCore.Shared.Items[itemData.name], "remove")
                         TriggerEvent('QBCore:Notify', Lang:t('success.reloaded'), "success")
                     end
